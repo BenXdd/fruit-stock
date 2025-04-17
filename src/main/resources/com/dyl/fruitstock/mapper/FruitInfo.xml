@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dyl.fruitstock.mapper.FruitInfoMapper">
+
+    <resultMap type="com.dyl.fruitstock.entity.FruitInfo" id="fruitInfoResultMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="stock" column="stock" jdbcType="INTEGER"/>
+        <result property="status" column="status" jdbcType="VARCHAR"/>
+        <result property="imgUrl" column="img_url" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="fruitInfoBaseColumn">
+        t.`id`,
+        t.`name`,
+        t.`stock`,
+        t.`status`,
+        t.`img_url`
+
+    </sql>
+
+    <!--查询单个-->
+    <select id="selectById" resultMap="fruitInfoResultMap">
+        SELECT
+        <include refid="fruitInfoBaseColumn"/>
+        FROM `fruit_info` t
+        WHERE t.`id` = #{id}
+        
+    </select>
+
+    <select id="selectByIds" resultMap="fruitInfoResultMap">
+        SELECT
+        <include refid="fruitInfoBaseColumn"/>
+        FROM `fruit_info` t
+        WHERE t.`id` in (<foreach collection="list" index="index" item="item" separator=",">#{item}</foreach>)
+        
+    </select>
+
+    <update id="updateById" parameterType="com.dyl.fruitstock.entity.FruitInfo">
+        UPDATE `fruit_info`
+        <set>
+            <if test="name != null and name != ''">
+                `name` = #{name},
+            </if>
+            <if test="stock != null">
+                `stock` = #{stock},
+            </if>
+            <if test="status != null and status != ''">
+                `status` = #{status},
+            </if>
+            <if test="imgUrl != null and imgUrl != ''">
+                `img_url` = #{imgUrl},
+            </if>
+        </set>
+        WHERE `id` = #{id}
+    </update>
+
+
+    <sql id="fruitInfoQueryCondition">
+            <if test="q.name != null and q.name != ''">
+                AND t.`name` like concat('%', #{q.name}, '%')
+            </if>
+            <if test="q.stock != null">
+               AND t.`stock` = #{q.stock}
+            </if>
+            <if test="q.status != null and q.status != ''">
+               AND t.`status` = #{q.status}
+            </if>
+            <if test="q.imgUrl != null and q.imgUrl != ''">
+               AND t.`img_url` = #{q.imgUrl}
+            </if>
+
+    </sql>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="selectOne" resultMap="fruitInfoResultMap">
+        SELECT
+        <include refid="fruitInfoBaseColumn"/>
+        FROM `fruit_info` t
+        <where>
+            <include refid="fruitInfoQueryCondition"/>
+        </where>
+        LIMIT 1
+    </select>
+    
+    <select id="select" resultMap="fruitInfoResultMap">
+        SELECT
+        <include refid="fruitInfoBaseColumn"/>
+        FROM `fruit_info` t
+        <where>
+            <include refid="fruitInfoQueryCondition"/>
+        </where>
+    </select>
+    
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into `fruit_info`(
+            `name`,
+            `stock`,
+            `status`,
+            `img_url`
+        ) VALUES (
+        #{name},
+        #{stock},
+        #{status},
+        #{imgUrl}
+        )
+    </insert>
+
+    <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into `fruit_info`(
+            `name`,
+            `stock`,
+            `status`,
+            `img_url`
+        ) VALUES
+        <foreach collection="list" index="index" item="item" separator=",">
+        (
+                #{item.name},
+                #{item.stock},
+                #{item.status},
+                #{item.imgUrl}
+        )
+        </foreach>
+    </insert>
+    
+    <!--新增or更新-->
+    <insert id="insertOrUpdate" keyProperty="id" useGeneratedKeys="true">
+        insert into `fruit_info`(
+            `name`,
+            `stock`,
+            `status`,
+            `img_url`
+        ) VALUES (
+        #{name},
+        #{stock},
+        #{status},
+        #{imgUrl}
+        )
+    on duplicate key update
+    name = values(name),
+    stock = values(stock),
+    status = values(status),
+    img_url = values(img_url)
+    </insert>
+    
+    
+
+</mapper>

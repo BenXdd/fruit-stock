@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: fruit-stock
+  datasource:
+    url: jdbc:mysql://localhost:3306/fruit-stock?useSSL=false&serverTimezone=UTC
+    username: root
+    password: 123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      initial-size: 5
+      max-active: 20
+    thymeleaf:
+      prefix: classpath:/templates/
+      suffix: .html
+      mode: HTML
+      encoding: UTF-8
+      cache: false
+  web:
+    resources:
+      static-locations: file:/Users/benx/Desktop/fruit-pic/,classpath:/static/
+
+
+
+file:
+  upload-dir: /Users/benx/Desktop/fruit-pic
+
+server:
+  port: 9009
+  tomcat:
+    max-http-request-header-size: 16384 # 增加到 16KB
+    max-swallow-size: -1 # 无限制
+    max-http-form-post-size: 2097152 # 2MB

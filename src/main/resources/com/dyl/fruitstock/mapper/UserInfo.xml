@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dyl.fruitstock.mapper.UserInfoMapper">
+
+    <resultMap type="com.dyl.fruitstock.entity.UserInfo" id="userInfoResultMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="userName" column="user_name" jdbcType="VARCHAR"/>
+        <result property="userPassword" column="user_password" jdbcType="VARCHAR"/>
+        <result property="userState" column="user_state" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="userInfoBaseColumn">
+        t.`id`,
+        t.`user_name`,
+        t.`user_password`,
+        t.`user_state`
+
+    </sql>
+
+    <!--查询单个-->
+    <select id="selectById" resultMap="userInfoResultMap">
+        SELECT
+        <include refid="userInfoBaseColumn"/>
+        FROM `user_info` t
+        WHERE t.`id` = #{id}
+        
+    </select>
+
+    <select id="selectByIds" resultMap="userInfoResultMap">
+        SELECT
+        <include refid="userInfoBaseColumn"/>
+        FROM `user_info` t
+        WHERE t.`id` in (<foreach collection="list" index="index" item="item" separator=",">#{item}</foreach>)
+        
+    </select>
+
+    <update id="updateById" parameterType="com.dyl.fruitstock.entity.UserInfo">
+        UPDATE `user_info`
+        <set>
+            <if test="userName != null and userName != ''">
+                `user_name` = #{userName},
+            </if>
+            <if test="userPassword != null and userPassword != ''">
+                `user_password` = #{userPassword},
+            </if>
+            <if test="userState != null">
+                `user_state` = #{userState},
+            </if>
+        </set>
+        WHERE `id` = #{id}
+    </update>
+
+
+    <sql id="userInfoQueryCondition">
+            <if test="q.userName != null and q.userName != ''">
+               AND t.`user_name` = #{q.userName}
+            </if>
+            <if test="q.userPassword != null and q.userPassword != ''">
+               AND t.`user_password` = #{q.userPassword}
+            </if>
+            <if test="q.userState != null">
+               AND t.`user_state` = #{q.userState}
+            </if>
+
+    </sql>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="selectOne" resultMap="userInfoResultMap">
+        SELECT
+        <include refid="userInfoBaseColumn"/>
+        FROM `user_info` t
+        <where>
+            <include refid="userInfoQueryCondition"/>
+        </where>
+        LIMIT 1
+    </select>
+    
+    <select id="select" resultMap="userInfoResultMap">
+        SELECT
+        <include refid="userInfoBaseColumn"/>
+        FROM `user_info` t
+        <where>
+            <include refid="userInfoQueryCondition"/>
+        </where>
+    </select>
+    
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into `user_info`(
+            `user_name`,
+            `user_password`,
+            `user_state`
+        ) VALUES (
+        #{userName},
+        #{userPassword},
+        #{userState}
+        )
+    </insert>
+
+    <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into `user_info`(
+            `user_name`,
+            `user_password`,
+            `user_state`
+        ) VALUES
+        <foreach collection="list" index="index" item="item" separator=",">
+        (
+                #{item.userName},
+                #{item.userPassword},
+                #{item.userState}
+        )
+        </foreach>
+    </insert>
+    
+    <!--新增or更新-->
+    <insert id="insertOrUpdate" keyProperty="id" useGeneratedKeys="true">
+        insert into `user_info`(
+            `user_name`,
+            `user_password`,
+            `user_state`
+        ) VALUES (
+        #{userName},
+        #{userPassword},
+        #{userState}
+        )
+    on duplicate key update
+    user_name = values(user_name),
+    user_password = values(user_password),
+    user_state = values(user_state)
+    </insert>
+    
+    
+
+</mapper>

@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水果库存管理</title>
+    <style>
+        :root {
+            --primary: #007AFF; /* Apple 蓝色 */
+            --accent: #34C759; /* Apple 绿色 */
+            --red: #FF3B30; /* Apple 红色 */
+            --bg-light: #F5F5F7; /* 浅灰背景 */
+            --bg-dark: #1C2526; /* 深色模式 */
+            --card-bg: rgba(255, 255, 255, 0.8); /* 半透明卡片 */
+            --text: #1D1D1F; /* 深色文字 */
+            --text-secondary: #6E6E73; /* 次要文字 */
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+        }
+        [data-theme="dark"] {
+            --bg-light: #1C2526;
+            --card-bg: rgba(28, 37, 38, 0.8);
+            --text: #F5F5F7;
+            --text-secondary: #8E8E93;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Arial, sans-serif;
+            background: var(--bg-light);
+            color: var(--text);
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .search-box {
+            position: relative;
+        }
+        .search-box input {
+            padding: 8px 12px 8px 36px;
+            border: none;
+            border-radius: var(--radius);
+            background: var(--card-bg);
+            color: var(--text);
+            font-size: 14px;
+            width: 200px;
+            backdrop-filter: blur(10px);
+        }
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+        .theme-toggle {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text);
+        }
+        .add-button {
+            background: var(--accent);
+            color: white;
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 500;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .add-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+        .message {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: var(--radius);
+            color: white;
+            font-size: 14px;
+            z-index: 1001;
+            box-shadow: var(--shadow);
+        }
+        .message.show {
+            display: block;
+            animation: slideIn 0.3s ease-out, slideOut 0.3s ease-out 2.7s forwards;
+        }
+        .message.success {
+            background: var(--accent);
+        }
+        .message.error {
+            background: var(--red);
+        }
+        @keyframes slideIn {
+            from { transform: translate(-50%, -100%); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            to { transform: translate(-50%, -100%); opacity: 0; }
+        }
+        .table-container {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background: var(--primary);
+            color: white;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        tr {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        tr:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        td {
+            font-size: 14px;
+            color: var(--text);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        td img {
+            max-width: 80px;
+            max-height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        td img:hover {
+            transform: scale(1.1);
+        }
+        .status-icon {
+            display: inline-block;
+            width: 48px;
+            height: 20px;
+            border-radius: 6px;
+            line-height: 20px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            color: #FFF;
+        }
+        .status-icon.on {
+            background: var(--accent);
+        }
+        .status-icon.off {
+            background: var(--red);
+        }
+        .actions button {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-right: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        .actions button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s, height 0.4s;
+        }
+        .actions button:active::after {
+            width: 200px;
+            height: 200px;
+        }
+        .edit-btn { background: var(--primary); }
+        .status-btn { background: #5856D6; }
+        .stock-up-btn { background: #FF9500; }
+        .stock-down-btn { background: var(--red); }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 8px;
+        }
+        .pagination button {
+            background: var(--card-bg);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .pagination button:hover {
+            background: var(--primary);
+            color: white;
+        }
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 24px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            animation: modalIn 0.3s ease-out;
+        }
+        @keyframes modalIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .modal-content h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 16px;
+        }
+        .modal-content label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            display: block;
+        }
+        .modal-content input[type="text"],
+        .modal-content input[type="number"],
+        .modal-content select {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text);
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+        .modal-content input[type="file"] {
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .modal-content .drop-zone {
+            border: 2px dashed var(--text-secondary);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: border 0.2s;
+        }
+        .modal-content .drop-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(0, 123, 255, 0.1);
+        }
+        .modal-content img {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .modal-content .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        .modal-content button {
+            flex: 1;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 8px;
+        }
+        .modal-content button[type="submit"] {
+            background: var(--accent);
+        }
+        .modal-content button[type="button"] {
+            background: var(--red);
+        }
+        @media (max-width: 600px) {
+            .container { padding: 10px; }
+            .header h1 { font-size: 24px; }
+            .search-box input { width: 150px; }
+            .modal-content { width: 95%; }
+            th, td { font-size: 12px; padding: 8px; }
+            td img { max-width: 60px; }
+            .status-icon { width: 40px; height: 18px; font-size: 10px; line-height: 18px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>欢迎, <span th:text="${param.userName}">用户</span></h1>
+        <div class="toolbar">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜索水果...">
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+            <button class="add-button" onclick="openModal(false)">新增水果</button>
+        </div>
+    </div>
+    <div id="message" class="message"></div>
+    <div class="table-container">
+        <table id="fruitTable">
+            <thead>
+            <tr>
+                <th>名称</th>
+                <th>库存</th>
+                <th>状态</th>
+                <th>图片</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <div class="pagination">
+        <button onclick="fetchFruits(currentPage - 1)" id="prevPage">上一页</button>
+        <button onclick="fetchFruits(currentPage + 1)" id="nextPage">下一页</button>
+    </div>
+</div>
+
+<div id="fruitModal" class="modal">
+    <div class="modal-content">
+        <h2 id="modalTitle">新增水果</h2>
+        <form id="fruitForm">
+            <label>名称</label>
+            <input type="text" name="name" required>
+            <label>库存</label>
+            <input type="number" name="stock" required min="0">
+            <label>状态</label>
+            <select name="status" required>
+                <option value="1">上架</option>
+                <option value="0">下架</option>
+            </select>
+            <label>图片</label>
+            <div class="drop-zone" id="dropZone">
+                拖拽图片或点击选择 (PNG/JPG)
+                <input type="file" name="image" accept="image/png,image/jpeg,image/jpg" style="display: none;">
+            </div>
+            <img id="imagePreview" src="" alt="预览" style="display: none;">
+            <div class="button-group">
+                <button type="submit">提交</button>
+                <button type="button" onclick="closeModal()">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let currentPage = 1;
+    let isEdit = false;
+    let editId = null;
+    let totalPages = 1;
+
+    function fetchFruits(page = 1, search = '') {
+        const url = `/api/fruits?page=${page}&size=10${search ? `&name=${encodeURIComponent(search)}` : ''}`;
+        document.body.classList.add('loading');
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                document.body.classList.remove('loading');
+                if (data.code !== 200) {
+                    showMessage('加载数据失败', false);
+                    return;
+                }
+                const tbody = document.querySelector('#fruitTable tbody');
+                tbody.innerHTML = '';
+                data.data.list.forEach(fruit => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                            <td>${fruit.name}</td>
+                            <td>${fruit.stock}</td>
+                            <td><span class="status-icon ${fruit.status === '1' ? 'on' : 'off'}">${fruit.status === '1' ? '上架' : '下架'}</span></td>
+                            <td><img src="${fruit.imgUrl}" alt="${fruit.name}" onerror="this.src='/images/placeholder.png'; console.log('Image failed: ${fruit.imgUrl}')"></td>
+                            <td class="actions">
+                                <button class="edit-btn" onclick="openModal(true, ${fruit.id}, '${fruit.name}', ${fruit.stock}, '${fruit.status}', '${fruit.imgUrl}')">编辑</button>
+                                <button class="status-btn" onclick="toggleStatus(${fruit.id}, '${fruit.status === '1' ? '0' : '1'}')">切换状态</button>
+                                <button class="stock-up-btn" onclick="adjustStock(${fruit.id}, 10)">+10</button>
+                                <button class="stock-down-btn" onclick="adjustStock(${fruit.id}, -10)">-10</button>
+                            </td>
+                        `;
+                    tbody.appendChild(row);
+                });
+                currentPage = data.data.page;
+                totalPages = data.data.totalPages;
+                updatePagination();
+            })
+            .catch(() => {
+                document.body.classList.remove('loading');
+                showMessage('网络错误，请重试', false);
+            });
+    }
+
+    function updatePagination() {
+        const prev = document.getElementById('prevPage');
+        const next = document.getElementById('nextPage');
+        prev.disabled = currentPage <= 1;
+        next.disabled = currentPage >= totalPages;
+    }
+
+    function openModal(edit, id, name, stock, status, imgUrl) {
+        isEdit = edit;
+        editId = id;
+        const modal = document.getElementById('fruitModal');
+        const form = document.getElementById('fruitForm');
+        const title = document.getElementById('modalTitle');
+        const preview = document.getElementById('imagePreview');
+        title.textContent = edit ? '编辑水果' : '新增水果';
+        form.reset();
+        if (edit) {
+            form.name.value = name;
+            form.stock.value = stock;
+            form.status.value = status;
+            preview.src = imgUrl;
+            preview.style.display = imgUrl && imgUrl !== '/images/placeholder.png' ? 'block' : 'none';
+        } else {
+            preview.src = '';
+            preview.style.display = 'none';
+        }
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('fruitModal');
+        modal.style.display = 'none';
+        document.getElementById('message').classList.remove('show', 'success', 'error');
+        document.getElementById('fruitForm').reset();
+        document.getElementById('imagePreview').style.display = 'none';
+    }
+
+    function showMessage(text, isSuccess) {
+        const messageDiv = document.getElementById('message');
+        messageDiv.textContent = text;
+        messageDiv.classList.remove('success', 'error');
+        messageDiv.classList.add(isSuccess ? 'success' : 'error');
+        messageDiv.classList.add('show');
+        setTimeout(() => messageDiv.classList.remove('show'), 3000);
+    }
+
+    function toggleStatus(id, status) {
+        fetch('/api/fruits/status', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, status })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    fetchFruits(currentPage);
+                    showMessage('状态更新成功', true);
+                } else {
+                    showMessage(data.msg || '更新状态失败', false);
+                }
+            })
+            .catch(() => showMessage('网络错误，请重试', false));
+    }
+
+    function adjustStock(id, delta) {
+
+        const customData = {
+            id: id,
+            stock: delta,
+        };
+        fetch('/api/fruits/stock', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(customData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    fetchFruits(currentPage);
+                    showMessage('库存调整成功', true);
+                } else {
+                    showMessage(data.msg || '调整库存失败', false);
+                }
+            })
+            .catch(() => showMessage('网络错误，请重试', false));
+    }
+
+    function toggleTheme() {
+        const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    }
+
+    document.getElementById('fruitForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const fruitImage = form.image.files[0];
+        const messageDiv = document.getElementById('message');
+
+        if (!form.name.value.trim()) {
+            showMessage('名称不能为空', false);
+            return;
+        }
+        if (!form.stock.value || form.stock.value < 0) {
+            showMessage('库存必须为非负数', false);
+            return;
+        }
+        if (fruitImage) {
+            const maxSize = 2 * 1024 * 1024;
+            const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+            if (!validTypes.includes(fruitImage.type)) {
+                showMessage('请上传 PNG/JPG 图片', false);
+                return;
+            }
+            if (fruitImage.size > maxSize) {
+                showMessage('图片大小不能超过 2MB', false);
+                return;
+            }
+        }
+
+        const formData = new FormData();
+        formData.append('name', form.name.value);
+        formData.append('stock', form.stock.value);
+        formData.append('status', form.status.value);
+        if (fruitImage) {
+            formData.append('image', fruitImage);
+        }
+
+        const url = isEdit ? `/api/fruits/${editId}` : '/api/fruits';
+        document.body.classList.add('loading');
+        const minLoadingTime = new Promise(resolve => setTimeout(resolve, 1500));
+
+        fetch(url, {
+            method: isEdit ? 'PUT' : 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                Promise.all([minLoadingTime]).then(() => {
+                    document.body.classList.remove('loading');
+                    if (data.code !== 200) {
+                        showMessage(data.msg || (isEdit ? '更新失败' : '新增失败'), false);
+                        return;
+                    }
+                    showMessage(isEdit ? '更新成功' : '新增成功', true);
+                    closeModal();
+                    fetchFruits(currentPage);
+                });
+            })
+            .catch(() => {
+                Promise.all([minLoadingTime]).then(() => {
+                    document.body.classList.remove('loading');
+                    showMessage('网络错误，请重试', false);
+                });
+            });
+    });
+
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = dropZone.querySelector('input[type="file"]');
+    const preview = document.getElementById('imagePreview');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            fileInput.files = e.dataTransfer.files;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            preview.src = isEdit ? preview.src : '';
+            preview.style.display = isEdit && preview.src ? 'block' : 'none';
+        }
+    });
+
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        const search = e.target.value.trim();
+        fetchFruits(1, search);
+    });
+
+    if (localStorage.getItem('theme') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+
+    fetchFruits();
+</script>
+</body>
+</html>

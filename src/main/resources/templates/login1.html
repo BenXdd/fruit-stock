@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>登录</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ffecd2, #ffb3b3);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            overflow: hidden;
+        }
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            width: 360px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/food.png') repeat;
+            opacity: 0.1;
+            z-index: 0;
+        }
+        .login-container h2 {
+            margin-bottom: 15px;
+            color: #d32f2f;
+            font-weight: bold;
+            position: relative;
+            z-index: 1;
+        }
+        .login-container input {
+            width: 100%;
+            padding: 12px;
+            margin: 12px 0;
+            border: 2px solid #ffd180;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+            background: #fffde7;
+            transition: border-color 0.3s;
+            position: relative;
+            z-index: 1;
+        }
+        .login-container input:focus {
+            border-color: #f06292;
+            outline: none;
+        }
+        .login-container button {
+            width: 200px;
+            padding: 10px;
+            margin: 15px auto;
+            background: #ff7043;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            display: block;
+            position: relative;
+            z-index: 1;
+        }
+        .login-container button:hover {
+            background: #f06292;
+            transform: scale(1.02);
+        }
+        .error-message {
+            color: #d32f2f;
+            font-size: 14px;
+            margin-top: 12px;
+            display: none;
+            position: relative;
+            z-index: 1;
+        }
+        .fruit-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            z-index: 1;
+        }
+        .floating-fruit {
+            position: absolute;
+            animation: float 4s ease-in-out infinite;
+            z-index: 0;
+        }
+        .floating-fruit span {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+        }
+        @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+<div class="login-container">
+    <div class="fruit-icon">🍎</div>
+    <h2>云龙水果库存管理系统</h2>
+    <h2>欢迎登录</h2>
+    <input type="text" id="username" placeholder="用户名" />
+    <input type="password" id="password" placeholder="密码" />
+    <button onclick="login()">登录</button>
+    <div id="error" class="error-message">登录失败，请检查用户名或密码</div>
+    <!-- 漂浮的水果装饰 -->
+    <div class="floating-fruit" style="top: 20px; left: 20px;">
+        <span style="font-size: 40px;">🍓</span>
+    </div>
+    <div class="floating-fruit" style="bottom: 30px; right: 20px;">
+        <span style="font-size: 40px;">🍊</span>
+    </div>
+</div>
+
+<script>
+    function login() {
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        const errorDiv = document.getElementById("error");
+
+        const customData = {
+            userName: username,
+            passWord: password,
+        };
+
+        fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(customData)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('登录失败');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // 提取 userName
+                    const userData = data.data || {};
+                    const params = new URLSearchParams({
+                        userName: userData.userName
+                        // 不传递 userPassword（安全考虑）
+                    });
+                    // 存储 userName
+                    localStorage.setItem('userName', userData.userName);
+                    // 跳转到列表页面
+                    window.location.href = `/dashboard?${params.toString()}`;
+                } else {
+                    errorDiv.style.display = 'block';
+                    errorDiv.textContent = data.message || '登录失败，请检查用户名或密码';
+                }
+            })
+            .catch(error => {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = '网络错误，请稍后重试';
+                console.error('Error:', error);
+            });
+    }
+</script>
+</body>
+</html>
