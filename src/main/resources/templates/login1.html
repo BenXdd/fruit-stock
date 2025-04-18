@@ -166,7 +166,7 @@
                     // 存储 userName
                     localStorage.setItem('userName', userData.userName);
                     // 跳转到列表页面
-                    window.location.href = `/dashboard?${params.toString()}`;
+                    window.location.href = `/admin/dashboard?${params.toString()}`;
                 } else {
                     errorDiv.style.display = 'block';
                     errorDiv.textContent = data.message || '登录失败，请检查用户名或密码';
