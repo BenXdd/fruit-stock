@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Builder
@@ -51,5 +52,21 @@ public class OrderInfo implements Entity<Integer> {
      * 修改时间
      */
     private Long updateTime;
+
+    /**
+     * 0:init   1: Settlement
+     */
+    private String orderStatus;
+
+
+    private List<ProductItem> productArr;
+
+
+    @Data
+    public static class ProductItem {
+        private Integer productId;
+        private Integer quantity;
+
+    }
 
 }

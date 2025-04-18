@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -32,10 +33,11 @@ public class OrderInfoController {
       * 保存
       */
     @PostMapping("/submit")
-    public ResultRsp<Map<String, Long>> submitOrder(@RequestBody OrderInfo orderInfo){
+    public ResultRsp<Object> submitOrder(@RequestBody OrderInfo orderInfo){
         log.info("#submitOrder req:{}", JSON.toJSONString(orderInfo));
+        String orderCode = "";
         try {
-            orderInfoService.submitOrder(orderInfo);
+            orderCode = orderInfoService.submitOrder(orderInfo);
         }catch (Exception e){
             if (e instanceof BusinessException){
                 return ResultRsp.failure(400, e.getMessage());
@@ -43,8 +45,9 @@ public class OrderInfoController {
                 return ResultRsp.failure(400, "系统正忙,请稍后重试");
             }
         }
-
-        return ResultRsp.success();
+        HashMap<String, String> resp = new HashMap<>();
+        resp.put("orderCode",orderCode);
+        return ResultRsp.success(resp);
     }
 
     /**

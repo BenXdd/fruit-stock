@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace=".mapper.OrderInfoMapper">
+<mapper namespace="com.dyl.fruitstock.mapper.OrderInfoMapper">
 
-    <resultMap type=".entity.OrderInfo" id="orderInfoResultMap">
+    <resultMap type="com.dyl.fruitstock.entity.OrderInfo" id="orderInfoResultMap">
         <result property="id" column="id" jdbcType="INTEGER"/>
         <result property="orderCode" column="order_code" jdbcType="VARCHAR"/>
         <result property="todayStr" column="today_str" jdbcType="VARCHAR"/>
@@ -11,6 +11,7 @@
         <result property="totalCostPrice" column="total_cost_price" jdbcType="NUMERIC"/>
         <result property="createTime" column="create_time" jdbcType="INTEGER"/>
         <result property="updateTime" column="update_time" jdbcType="INTEGER"/>
+        <result property="orderStatus" column="order_status" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="orderInfoBaseColumn">
@@ -21,7 +22,8 @@
         t.`total_sale_price`,
         t.`total_cost_price`,
         t.`create_time`,
-        t.`update_time`
+        t.`update_time`,
+        t.`order_status`
 
     </sql>
 
@@ -31,7 +33,7 @@
         <include refid="orderInfoBaseColumn"/>
         FROM `order_info` t
         WHERE t.`id` = #{id}
-        
+
     </select>
 
     <select id="selectByIds" resultMap="orderInfoResultMap">
@@ -39,10 +41,10 @@
         <include refid="orderInfoBaseColumn"/>
         FROM `order_info` t
         WHERE t.`id` in (<foreach collection="list" index="index" item="item" separator=",">#{item}</foreach>)
-        
+
     </select>
 
-    <update id="updateById" parameterType=".entity.OrderInfo">
+    <update id="updateById" parameterType="com.dyl.fruitstock.entity.OrderInfo">
         UPDATE `order_info`
         <set>
             <if test="orderCode != null and orderCode != ''">
@@ -66,33 +68,39 @@
             <if test="updateTime != null">
                 `update_time` = #{updateTime},
             </if>
+            <if test="orderStatus != null and orderStatus != ''">
+                `order_status` = #{orderStatus},
+            </if>
         </set>
         WHERE `id` = #{id}
     </update>
 
 
     <sql id="orderInfoQueryCondition">
-            <if test="q.orderCode != null and q.orderCode != ''">
-               AND t.`order_code` = #{q.orderCode}
-            </if>
-            <if test="q.todayStr != null and q.todayStr != ''">
-               AND t.`today_str` = #{q.todayStr}
-            </if>
-            <if test="q.productInfo != null and q.productInfo != ''">
-               AND t.`product_info` = #{q.productInfo}
-            </if>
-            <if test="q.totalSalePrice != null">
-               AND t.`total_sale_price` = #{q.totalSalePrice}
-            </if>
-            <if test="q.totalCostPrice != null">
-               AND t.`total_cost_price` = #{q.totalCostPrice}
-            </if>
-            <if test="q.createTime != null">
-               AND t.`create_time` = #{q.createTime}
-            </if>
-            <if test="q.updateTime != null">
-               AND t.`update_time` = #{q.updateTime}
-            </if>
+        <if test="q.orderCode != null and q.orderCode != ''">
+            AND t.`order_code` = #{q.orderCode}
+        </if>
+        <if test="q.todayStr != null and q.todayStr != ''">
+            AND t.`today_str` = #{q.todayStr}
+        </if>
+        <if test="q.productInfo != null and q.productInfo != ''">
+            AND t.`product_info` = #{q.productInfo}
+        </if>
+        <if test="q.totalSalePrice != null">
+            AND t.`total_sale_price` = #{q.totalSalePrice}
+        </if>
+        <if test="q.totalCostPrice != null">
+            AND t.`total_cost_price` = #{q.totalCostPrice}
+        </if>
+        <if test="q.createTime != null">
+            AND t.`create_time` = #{q.createTime}
+        </if>
+        <if test="q.updateTime != null">
+            AND t.`update_time` = #{q.updateTime}
+        </if>
+        <if test="q.orderStatus != null and q.orderStatus != ''">
+            AND t.`order_status` = #{q.orderStatus}
+        </if>
 
     </sql>
 
@@ -106,7 +114,7 @@
         </where>
         LIMIT 1
     </select>
-    
+
     <select id="select" resultMap="orderInfoResultMap">
         SELECT
         <include refid="orderInfoBaseColumn"/>
@@ -115,7 +123,7 @@
             <include refid="orderInfoQueryCondition"/>
         </where>
     </select>
-    
+
     <!--新增所有列-->
     <insert id="insert" keyProperty="id" useGeneratedKeys="true">
         insert into `order_info`(
@@ -125,41 +133,45 @@
             `total_sale_price`,
             `total_cost_price`,
             `create_time`,
-            `update_time`
+            `update_time`,
+            `order_status`
         ) VALUES (
-        #{orderCode},
-        #{todayStr},
-        #{productInfo},
-        #{totalSalePrice},
-        #{totalCostPrice},
-        #{createTime},
-        #{updateTime}
-        )
+                     #{orderCode},
+                     #{todayStr},
+                     #{productInfo},
+                     #{totalSalePrice},
+                     #{totalCostPrice},
+                     #{createTime},
+                     #{updateTime},
+                     #{orderStatus}
+                 )
     </insert>
 
     <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
         insert into `order_info`(
-            `order_code`,
-            `today_str`,
-            `product_info`,
-            `total_sale_price`,
-            `total_cost_price`,
-            `create_time`,
-            `update_time`
+        `order_code`,
+        `today_str`,
+        `product_info`,
+        `total_sale_price`,
+        `total_cost_price`,
+        `create_time`,
+        `update_time`,
+        `order_status`
         ) VALUES
         <foreach collection="list" index="index" item="item" separator=",">
-        (
-                #{item.orderCode},
-                #{item.todayStr},
-                #{item.productInfo},
-                #{item.totalSalePrice},
-                #{item.totalCostPrice},
-                #{item.createTime},
-                #{item.updateTime}
-        )
+            (
+            #{item.orderCode},
+            #{item.todayStr},
+            #{item.productInfo},
+            #{item.totalSalePrice},
+            #{item.totalCostPrice},
+            #{item.createTime},
+            #{item.updateTime},
+            #{item.orderStatus}
+            )
         </foreach>
     </insert>
-    
+
     <!--新增or更新-->
     <insert id="insertOrUpdate" keyProperty="id" useGeneratedKeys="true">
         insert into `order_info`(
@@ -169,24 +181,27 @@
             `total_sale_price`,
             `total_cost_price`,
             `create_time`,
-            `update_time`
+            `update_time`,
+            `order_status`
         ) VALUES (
-        #{orderCode},
-        #{todayStr},
-        #{productInfo},
-        #{totalSalePrice},
-        #{totalCostPrice},
-        #{createTime},
-        #{updateTime}
-        )
-    on duplicate key update
-    order_code = values(order_code),
-    today_str = values(today_str),
-    product_info = values(product_info),
-    total_sale_price = values(total_sale_price),
-    total_cost_price = values(total_cost_price),
-    create_time = values(create_time),
-    update_time = values(update_time)
+             #{orderCode},
+             #{todayStr},
+             #{productInfo},
+             #{totalSalePrice},
+             #{totalCostPrice},
+             #{createTime},
+             #{updateTime},
+             #{orderStatus}
+                 )
+            on duplicate key update
+             order_code = values(order_code),
+             today_str = values(today_str),
+             product_info = values(product_info),
+             total_sale_price = values(total_sale_price),
+             total_cost_price = values(total_cost_price),
+             create_time = values(create_time),
+             update_time = values(update_time),
+             order_status = values(order_status)
     </insert>
     
     

@@ -77,5 +77,5 @@ public interface IOrderInfoService {
      */
     List<OrderInfo> select(OrderInfo query);
 
-    void submitOrder(OrderInfo orderInfo);
+    String submitOrder(OrderInfo orderInfo);
 }

@@ -233,9 +233,9 @@
             background: #ff4500;
             color: white;
             border-radius: 50%;
-            padding: 8px 12px;
             font-size: 0.9em;
             font-weight: bold;
+            padding: 8px 12px;
         }
         /* 购物车弹框 */
         .cart-modal {
@@ -378,6 +378,58 @@
         .payment-modal-content button:hover {
             background: linear-gradient(to bottom, #218838, #1e7e34);
         }
+        /* 提示弹窗 */
+        .message-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .message-modal-content {
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .message-modal-content h2 {
+            color: #ff4500;
+            margin: 0 0 15px;
+            font-size: 1.8em;
+        }
+        .message-modal-content p {
+            font-size: 1.2em;
+            color: #333;
+            margin: 0 0 20px;
+        }
+        .message-modal-content.success h2 {
+            color: #28a745;
+        }
+        .message-modal-content.error h2 {
+            color: #ff4500;
+        }
+        .message-ok {
+            padding: 12px 24px;
+            background: linear-gradient(to bottom, #007AFF, #005BBB);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .message-ok:hover {
+            background: linear-gradient(to bottom, #005BBB, #003F87);
+            transform: scale(1.05);
+        }
         /* 加载和错误提示 */
         .loading {
             text-align: center;
@@ -457,6 +509,16 @@
         <div class="qr-code"></div>
         <div class="status">请扫描二维码支付</div>
         <button onclick="confirmPayment()">确认支付</button>
+    </div>
+</div>
+
+<!-- 提示弹窗 -->
+<div class="message-modal" id="message-modal">
+    <div class="message-modal-content">
+        <button class="close-modal" onclick="closeMessageModal()">×</button>
+        <h2 id="message-title">提示</h2>
+        <p id="message-text"></p>
+        <button class="message-ok" onclick="closeMessageModal()">确定</button>
     </div>
 </div>
 
@@ -557,7 +619,7 @@
         }
         const newQuantity = cart[productId].quantity + change;
         if (newQuantity > product.stock) {
-            alert(`库存不足，仅剩 ${product.stock} 件！`);
+            showMessageModal('error', `库存不足，仅剩 ${product.stock} 件！`);
             return;
         }
         cart[productId].quantity = Math.max(0, newQuantity);
@@ -637,7 +699,7 @@
     // 提交订单
     async function submitOrder() {
         if (Object.keys(cart).length === 0) {
-            alert('购物车为空！');
+            showMessageModal('error', '购物车为空！');
             return;
         }
 
@@ -659,7 +721,7 @@
                     // 如果需要认证，添加 headers
                     // 'Authorization': 'Bearer YOUR_TOKEN'
                 },
-                body: JSON.stringify({ productInfo })
+                body: JSON.stringify({ productArr: productInfo })
             });
 
             const data = await response.json();
@@ -668,22 +730,49 @@
             }
 
             orderId = data.data.orderId;
-            alert('订单提交成功！请支付订单：' + orderId);
+            showMessageModal('success', `订单提交成功！您的取货码：${data.data.orderCode}`);
 
             // 清空购物车
             cart = {};
             closeCart();
-            showPaymentModal();
+
+            // 可选：显示支付弹窗
+            // showPaymentModal();
 
             // 刷新商品列表（更新库存）
             await fetchProducts();
         } catch (error) {
             console.error('订单提交失败:', error);
-            alert(`订单提交失败：${error.message}`);
+            showMessageModal('error', `订单提交失败：${error.message}`);
         } finally {
             submitButton.disabled = false;
             submitButton.textContent = '提交订单';
         }
+    }
+
+    // 显示提示弹窗
+    function showMessageModal(type, message) {
+        const modal = document.getElementById('message-modal');
+        const title = document.getElementById('message-title');
+        const text = document.getElementById('message-text');
+        const content = document.querySelector('.message-modal-content');
+
+        // 设置标题和内容
+        title.textContent = type === 'success' ? '操作成功' : '操作失败';
+        text.textContent = message;
+
+        // 设置样式
+        content.classList.remove('success', 'error');
+        content.classList.add(type);
+
+        // 显示弹窗
+        modal.style.display = 'flex';
+    }
+
+    // 关闭提示弹窗
+    function closeMessageModal() {
+        const modal = document.getElementById('message-modal');
+        modal.style.display = 'none';
     }
 
     // 显示支付弹框
@@ -717,7 +806,7 @@
                 throw new Error(data.msg || '支付失败');
             }
 
-            alert('支付成功！感谢您的购买！');
+            showMessageModal('success', '支付成功！感谢您的购买！');
             modal.style.display = 'none';
             orderId = null;
         } catch (error) {
