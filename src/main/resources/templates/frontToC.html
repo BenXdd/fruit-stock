@@ -646,20 +646,20 @@
         submitButton.textContent = '提交中...';
 
         try {
-            const items = Object.entries(cart).map(([productId, item]) => ({
+            const productInfo = Object.entries(cart).map(([productId, item]) => ({
                 productId: parseInt(productId),
                 quantity: item.quantity
             }));
 
             // 调用订单提交接口
-            const response = await fetch('https://api.example.com/order/submit', {
+            const response = await fetch('/order/submit', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     // 如果需要认证，添加 headers
                     // 'Authorization': 'Bearer YOUR_TOKEN'
                 },
-                body: JSON.stringify({ items })
+                body: JSON.stringify({ productInfo })
             });
 
             const data = await response.json();

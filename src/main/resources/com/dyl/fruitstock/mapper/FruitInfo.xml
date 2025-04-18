@@ -173,7 +173,15 @@
     sale_price = values(sale_price),
     cost_price = values(cost_price)
     </insert>
-    
-    
+
+
+
+    <update id="updateStock">
+        UPDATE fruit_info
+        SET stock = stock - #{quantity}
+        WHERE id = #{productId}
+        AND stock >= 1;
+    </update>
+
 
 </mapper>
