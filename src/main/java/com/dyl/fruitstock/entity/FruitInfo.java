@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -34,6 +36,17 @@ public class FruitInfo implements Entity<Integer> {
      * 图片地址
      */
     private String imgUrl;
+
+
+    /**
+     * 销售价格
+     */
+    private BigDecimal salePrice;
+
+    /**
+     * 成本价格
+     */
+    private BigDecimal costPrice;
 
 
 }

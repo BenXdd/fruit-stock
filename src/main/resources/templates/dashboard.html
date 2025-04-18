@@ -6,14 +6,14 @@
     <title>水果库存管理</title>
     <style>
         :root {
-            --primary: #007AFF; /* Apple 蓝色 */
-            --accent: #34C759; /* Apple 绿色 */
-            --red: #FF3B30; /* Apple 红色 */
-            --bg-light: #F5F5F7; /* 浅灰背景 */
-            --bg-dark: #1C2526; /* 深色模式 */
-            --card-bg: rgba(255, 255, 255, 0.8); /* 半透明卡片 */
-            --text: #1D1D1F; /* 深色文字 */
-            --text-secondary: #6E6E73; /* 次要文字 */
+            --primary: #007AFF;
+            --accent: #34C759;
+            --red: #FF3B30;
+            --bg-light: #F5F5F7;
+            --bg-dark: #1C2526;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --text: #1D1D1F;
+            --text-secondary: #6E6E73;
             --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             --radius: 12px;
         }
@@ -366,6 +366,8 @@
             <tr>
                 <th>名称</th>
                 <th>库存</th>
+                <th>销售价格</th> <!-- 新增 -->
+                <th>成本价格</th> <!-- 新增 -->
                 <th>状态</th>
                 <th>图片</th>
                 <th>操作</th>
@@ -388,6 +390,10 @@
             <input type="text" name="name" required>
             <label>库存</label>
             <input type="number" name="stock" required min="0">
+            <label>销售价格 (元)</label> <!-- 新增 -->
+            <input type="number" name="salePrice" required min="0" step="0.01"> <!-- 支持两位小数 -->
+            <label>成本价格 (元)</label> <!-- 新增 -->
+            <input type="number" name="costPrice" required min="0" step="0.01"> <!-- 支持两位小数 -->
             <label>状态</label>
             <select name="status" required>
                 <option value="1">上架</option>
@@ -431,10 +437,12 @@
                     row.innerHTML = `
                             <td>${fruit.name}</td>
                             <td>${fruit.stock}</td>
+                            <td>${Number(fruit.salePrice).toFixed(2)}</td> <!-- 新增，格式化两位小数 -->
+                            <td>${Number(fruit.costPrice).toFixed(2)}</td> <!-- 新增，格式化两位小数 -->
                             <td><span class="status-icon ${fruit.status === '1' ? 'on' : 'off'}">${fruit.status === '1' ? '上架' : '下架'}</span></td>
                             <td><img src="${fruit.imgUrl}" alt="${fruit.name}" onerror="this.src='/images/placeholder.png'; console.log('Image failed: ${fruit.imgUrl}')"></td>
                             <td class="actions">
-                                <button class="edit-btn" onclick="openModal(true, ${fruit.id}, '${fruit.name}', ${fruit.stock}, '${fruit.status}', '${fruit.imgUrl}')">编辑</button>
+                                <button class="edit-btn" onclick="openModal(true, ${fruit.id}, '${fruit.name}', ${fruit.stock}, '${fruit.status}', '${fruit.imgUrl}', ${fruit.salePrice}, ${fruit.costPrice})">编辑</button>
                                 <button class="status-btn" onclick="toggleStatus(${fruit.id}, '${fruit.status === '1' ? '0' : '1'}')">切换状态</button>
                                 <button class="stock-up-btn" onclick="adjustStock(${fruit.id}, 10)">+10</button>
                                 <button class="stock-down-btn" onclick="adjustStock(${fruit.id}, -10)">-10</button>
@@ -459,7 +467,7 @@
         next.disabled = currentPage >= totalPages;
     }
 
-    function openModal(edit, id, name, stock, status, imgUrl) {
+    function openModal(edit, id, name, stock, status, imgUrl, salePrice, costPrice) { // 新增参数
         isEdit = edit;
         editId = id;
         const modal = document.getElementById('fruitModal');
@@ -472,11 +480,15 @@
             form.name.value = name;
             form.stock.value = stock;
             form.status.value = status;
+            form.salePrice.value = Number(salePrice).toFixed(2); // 新增
+            form.costPrice.value = Number(costPrice).toFixed(2); // 新增
             preview.src = imgUrl;
             preview.style.display = imgUrl && imgUrl !== '/images/placeholder.png' ? 'block' : 'none';
         } else {
             preview.src = '';
             preview.style.display = 'none';
+            form.salePrice.value = ''; // 新增
+            form.costPrice.value = ''; // 新增
         }
         modal.style.display = 'flex';
     }
@@ -517,7 +529,6 @@
     }
 
     function adjustStock(id, delta) {
-
         const customData = {
             id: id,
             stock: delta,
@@ -559,6 +570,14 @@
             showMessage('库存必须为非负数', false);
             return;
         }
+        if (!form.salePrice.value || form.salePrice.value < 0) { // 新增验证
+            showMessage('销售价格必须为非负数', false);
+            return;
+        }
+        if (!form.costPrice.value || form.costPrice.value < 0) { // 新增验证
+            showMessage('成本价格必须为非负数', false);
+            return;
+        }
         if (fruitImage) {
             const maxSize = 2 * 1024 * 1024;
             const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
@@ -576,6 +595,8 @@
         formData.append('name', form.name.value);
         formData.append('stock', form.stock.value);
         formData.append('status', form.status.value);
+        formData.append('salePrice', form.salePrice.value); // 新增
+        formData.append('costPrice', form.costPrice.value); // 新增
         if (fruitImage) {
             formData.append('image', fruitImage);
         }

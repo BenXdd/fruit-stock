@@ -3,6 +3,7 @@ package com.dyl.fruitstock.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -49,6 +50,8 @@ public class FruitInfoController {
             @RequestParam("name") String name,
             @RequestParam("stock") Integer stock,
             @RequestParam("status") String status,
+            @RequestParam("salePrice") BigDecimal salePrice,
+            @RequestParam("costPrice") BigDecimal costPrice,
             @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
 
         String imgUrl = saveImage(image);
@@ -57,6 +60,8 @@ public class FruitInfoController {
         fruit.setStock(stock);
         fruit.setStatus(status);
         fruit.setImgUrl(imgUrl);
+        fruit.setSalePrice(salePrice);
+        fruit.setCostPrice(costPrice);
         fruitInfoService.save(fruit);
         HashMap<String, Integer> map = new HashMap<>();
         map.put("id", fruit.getId());
@@ -72,6 +77,8 @@ public class FruitInfoController {
             @RequestParam("name") String name,
             @RequestParam("stock") Integer stock,
             @RequestParam("status") String status,
+            @RequestParam("salePrice") BigDecimal salePrice,
+            @RequestParam("costPrice") BigDecimal costPrice,
             @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
 
         FruitInfo fruitDb = fruitInfoService.getById(id);
@@ -86,6 +93,8 @@ public class FruitInfoController {
         fruit.setStock(stock);
         fruit.setStatus(status);
         fruit.setImgUrl(newImgUrl);
+        fruit.setSalePrice(salePrice);
+        fruit.setCostPrice(costPrice);
 
         fruitInfoService.updateById(fruit);
         return ResultRsp.success();
