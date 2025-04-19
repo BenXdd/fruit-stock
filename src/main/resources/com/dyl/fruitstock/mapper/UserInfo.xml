@@ -7,13 +7,25 @@
         <result property="userName" column="user_name" jdbcType="VARCHAR"/>
         <result property="userPassword" column="user_password" jdbcType="VARCHAR"/>
         <result property="userState" column="user_state" jdbcType="INTEGER"/>
+        <result property="phone" column="phone" jdbcType="VARCHAR"/>
+        <result property="email" column="email" jdbcType="VARCHAR"/>
+        <result property="gender" column="gender" jdbcType="VARCHAR"/>
+        <result property="createTime" column="create_time" jdbcType="INTEGER"/>
+        <result property="updateTime" column="update_time" jdbcType="INTEGER"/>
+        <result property="lastLoginTime" column="last_login_time" jdbcType="INTEGER"/>
     </resultMap>
 
     <sql id="userInfoBaseColumn">
         t.`id`,
         t.`user_name`,
         t.`user_password`,
-        t.`user_state`
+        t.`user_state`,
+        t.`phone`,
+        t.`email`,
+        t.`gender`,
+        t.`create_time`,
+        t.`update_time`,
+        t.`last_login_time`
 
     </sql>
 
@@ -46,6 +58,24 @@
             <if test="userState != null">
                 `user_state` = #{userState},
             </if>
+            <if test="phone != null and phone != ''">
+                `phone` = #{phone},
+            </if>
+            <if test="email != null and email != ''">
+                `email` = #{email},
+            </if>
+            <if test="gender != null and gender != ''">
+                `gender` = #{gender},
+            </if>
+            <if test="createTime != null">
+                `create_time` = #{createTime},
+            </if>
+            <if test="updateTime != null">
+                `update_time` = #{updateTime},
+            </if>
+            <if test="lastLoginTime != null">
+                `last_login_time` = #{lastLoginTime},
+            </if>
         </set>
         WHERE `id` = #{id}
     </update>
@@ -60,6 +90,24 @@
             </if>
             <if test="q.userState != null">
                AND t.`user_state` = #{q.userState}
+            </if>
+            <if test="q.phone != null and q.phone != ''">
+               AND t.`phone` = #{q.phone}
+            </if>
+            <if test="q.email != null and q.email != ''">
+               AND t.`email` = #{q.email}
+            </if>
+            <if test="q.gender != null and q.gender != ''">
+               AND t.`gender` = #{q.gender}
+            </if>
+            <if test="q.createTime != null">
+               AND t.`create_time` = #{q.createTime}
+            </if>
+            <if test="q.updateTime != null">
+               AND t.`update_time` = #{q.updateTime}
+            </if>
+            <if test="q.lastLoginTime != null">
+               AND t.`last_login_time` = #{q.lastLoginTime}
             </if>
 
     </sql>
@@ -89,11 +137,23 @@
         insert into `user_info`(
             `user_name`,
             `user_password`,
-            `user_state`
+            `user_state`,
+            `phone`,
+            `email`,
+            `gender`,
+            `create_time`,
+            `update_time`,
+            `last_login_time`
         ) VALUES (
         #{userName},
         #{userPassword},
-        #{userState}
+        #{userState},
+        #{phone},
+        #{email},
+        #{gender},
+        #{createTime},
+        #{updateTime},
+        #{lastLoginTime}
         )
     </insert>
 
@@ -101,13 +161,25 @@
         insert into `user_info`(
             `user_name`,
             `user_password`,
-            `user_state`
+            `user_state`,
+            `phone`,
+            `email`,
+            `gender`,
+            `create_time`,
+            `update_time`,
+            `last_login_time`
         ) VALUES
         <foreach collection="list" index="index" item="item" separator=",">
         (
                 #{item.userName},
                 #{item.userPassword},
-                #{item.userState}
+                #{item.userState},
+                #{item.phone},
+                #{item.email},
+                #{item.gender},
+                #{item.createTime},
+                #{item.updateTime},
+                #{item.lastLoginTime}
         )
         </foreach>
     </insert>
@@ -117,16 +189,34 @@
         insert into `user_info`(
             `user_name`,
             `user_password`,
-            `user_state`
+            `user_state`,
+            `phone`,
+            `email`,
+            `gender`,
+            `create_time`,
+            `update_time`,
+            `last_login_time`
         ) VALUES (
         #{userName},
         #{userPassword},
-        #{userState}
+        #{userState},
+        #{phone},
+        #{email},
+        #{gender},
+        #{createTime},
+        #{updateTime},
+        #{lastLoginTime}
         )
     on duplicate key update
     user_name = values(user_name),
     user_password = values(user_password),
-    user_state = values(user_state)
+    user_state = values(user_state),
+    phone = values(phone),
+    email = values(email),
+    gender = values(gender),
+    create_time = values(create_time),
+    update_time = values(update_time),
+    last_login_time = values(last_login_time)
     </insert>
     
     

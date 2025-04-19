@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>内部员工列表</title>
+    <style>
+        :root {
+            --primary: #007AFF;
+            --accent: #34C759;
+            --red: #FF3B30;
+            --bg-light: #F5F5F7;
+            --bg-dark: #1C2526;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --text: #1D1D1F;
+            --text-secondary: #6E6E73;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+        }
+        [data-theme="dark"] {
+            --bg-light: #1C2526;
+            --card-bg: rgba(28, 37, 38, 0.8);
+            --text: #F5F5F7;
+            --text-secondary: #8E8E93;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Arial, sans-serif;
+            background: var(--bg-light);
+            color: var(--text);
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+        }
+        .navbar {
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+            padding: 12px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .nav-list {
+            display: flex;
+            gap: 16px;
+            list-style: none;
+            margin: 0;
+        }
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            background: var(--card-bg);
+            transition: transform 0.2s, background 0.3s, color 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-item a:hover {
+            transform: translateY(-2px);
+            background: var(--primary);
+            color: white;
+        }
+        .nav-item a.active {
+            background: white;
+            color: var(--primary);
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        .nav-item a.active .nav-icon {
+            transform: scale(1.2);
+        }
+        .nav-icon {
+            font-size: 18px;
+            transition: transform 0.2s;
+        }
+        .nav-text {
+            position: relative;
+        }
+        .nav-text::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+        .nav-item a:hover .nav-text::after {
+            width: 100%;
+        }
+        .nav-item a::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s, height 0.4s;
+        }
+        .nav-item a:active::before {
+            width: 200px;
+            height: 200px;
+        }
+        [data-theme="dark"] .navbar {
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+        }
+        [data-theme="dark"] .nav-item a {
+            background: rgba(28, 37, 38, 0.9);
+        }
+        [data-theme="dark"] .nav-item a.active {
+            background: var(--primary);
+            color: white;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .add-btn {
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            background: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .add-btn:hover {
+            background: var(--accent);
+        }
+        .theme-toggle {
+            padding: 8px 12px;
+            border-radius: var(--radius);
+            background: var(--card-bg);
+            color: var(--text);
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            height: 34px;
+            line-height: 1;
+        }
+        .theme-toggle:hover {
+            background: var(--primary);
+            color: white;
+        }
+        .message {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: var(--radius);
+            color: white;
+            font-size: 14px;
+            z-index: 1001;
+            box-shadow: var(--shadow);
+        }
+        .message.show {
+            display: block;
+            animation: slideIn 0.3s ease-out, slideOut 0.3s ease-out 2.7s forwards;
+        }
+        .message.success {
+            background: var(--accent);
+        }
+        .message.error {
+            background: var(--red);
+        }
+        @keyframes slideIn {
+            from { transform: translate(-50%, -100%); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            to { transform: translate(-50%, -100%); opacity: 0; }
+        }
+        .table-container {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background: var(--primary);
+            color: white;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        tr {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        tr:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        td {
+            font-size: 14px;
+            color: var(--text);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .status-icon {
+            display: inline-block;
+            width: 80px;
+            height: 20px;
+            border-radius: 6px;
+            line-height: 20px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            color: #FFF;
+        }
+        .status-icon.active {
+            background: var(--accent);
+        }
+        .status-icon.frozen {
+            background: var(--red);
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 8px;
+        }
+        .pagination button {
+            background: var(--card-bg);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: background 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        .pagination button:hover {
+            background: var(--primary);
+            color: white;
+        }
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        @media (max-width: 600px) {
+            .container { padding: 10px; }
+            .header h1 { font-size: 24px; }
+            .add-btn, .theme-toggle { font-size: 12px; height: 30px; }
+            .nav-list { gap: 10px; justify-content: center; }
+            .nav-item a { padding: 8px 12px; font-size: 14px; }
+            th, td { font-size: 12px; padding: 8px; }
+            .status-icon { width: 60px; height: 18px; font-size: 10px; line-height: 18px; }
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-container">
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="/admin/dashboard">
+                    <span class="nav-icon">🍎</span>
+                    <span class="nav-text">水果库存管理</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/orders">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-text">订单详情</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/users" class="active">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-text">内部员工列表</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="header">
+        <h1>内部员工列表</h1>
+        <div class="toolbar">
+            <button class="add-btn" onclick="window.location.href='/admin/register'">新增员工</button>
+            <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+        </div>
+    </div>
+    <div id="message" class="message"></div>
+    <div class="table-container">
+        <table id="userTable">
+            <thead>
+            <tr>
+                <th>用户名</th>
+                <th>密码</th>
+                <th>状态</th>
+                <th>手机号</th>
+                <th>邮箱</th>
+                <th>性别</th>
+                <th>创建时间</th>
+                <th>修改时间</th>
+                <th>最近登录</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <div class="pagination">
+        <button onclick="fetchUsers(currentPage - 1)" id="prevPage">上一页</button>
+        <button onclick="fetchUsers(currentPage + 1)" id="nextPage">下一页</button>
+    </div>
+</div>
+
+<script>
+    let currentPage = 1;
+    let totalPages = 1;
+
+    function fetchUsers(page = 1) {
+        let params = `page=${page}&size=10`;
+        const url = `/user?${params}`;
+        console.log('Fetching URL:', url);
+        document.body.classList.add('loading');
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                document.body.classList.remove('loading');
+                if (data.code !== 200) {
+                    showMessage('加载数据失败', false);
+                    return;
+                }
+                const tbody = document.querySelector('#userTable tbody');
+                tbody.innerHTML = '';
+                data.data.list.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                            <td>${user.userName}</td>
+                            <td>${user.userPassword.slice(0, 4) + '****'}</td>
+                            <td><span class="status-icon ${user.userState === 0 ? 'active' : 'frozen'}">
+                                ${user.userState === 0 ? '未冻结' : '冻结'}
+                            </span></td>
+                            <td>${user.phone}</td>
+                            <td>${user.email || '-'}</td>
+                            <td>${user.gender === '0' ? '女' : user.gender === '1' ? '男' : '-'}</td>
+                            <td>${user.createTime ? new Date(user.createTime * 1000).toLocaleString() : '-'}</td>
+                            <td>${user.updateTime ? new Date(user.updateTime * 1000).toLocaleString() : '-'}</td>
+                            <td>${user.lastLoginTime ? new Date(user.lastLoginTime * 1000).toLocaleString() : '-'}</td>
+                        `;
+                    tbody.appendChild(row);
+                });
+                currentPage = data.data.page;
+                totalPages = data.data.totalPages;
+                updatePagination();
+            })
+            .catch(() => {
+                document.body.classList.remove('loading');
+                showMessage('网络错误，请重试', false);
+            });
+    }
+
+    function updatePagination() {
+        const prev = document.getElementById('prevPage');
+        const next = document.getElementById('nextPage');
+        prev.disabled = currentPage <= 1;
+        next.disabled = currentPage >= totalPages;
+    }
+
+    function showMessage(text, isSuccess) {
+        const messageDiv = document.getElementById('message');
+        messageDiv.textContent = text;
+        messageDiv.classList.remove('success', 'error');
+        messageDiv.classList.add(isSuccess ? 'success' : 'error');
+        messageDiv.classList.add('show');
+        setTimeout(() => messageDiv.classList.remove('show'), 3000);
+    }
+
+    function toggleTheme() {
+        const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    }
+
+    function setActiveNav() {
+        const navLinks = document.querySelectorAll('.nav-item a');
+        const currentPath = window.location.pathname;
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+    }
+
+    if (localStorage.getItem('theme') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+
+    setActiveNav();
+    fetchUsers();
+</script>
+</body>
+</html>

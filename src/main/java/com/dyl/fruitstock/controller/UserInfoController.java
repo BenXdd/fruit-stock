@@ -8,6 +8,7 @@ import com.dyl.fruitstock.dto.login.ResultRsp;
 import com.dyl.fruitstock.entity.UserInfo;
 import com.dyl.fruitstock.service.IPage;
 import com.dyl.fruitstock.service.IUserInfoService;
+import com.dyl.fruitstock.utils.EncryptHelpUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -27,16 +28,25 @@ public class UserInfoController {
     @Resource
     private IUserInfoService userInfoService;
 
+
+    private static final String Key = "ZW6wAcLaa9LujHAS";
+
     /**
       * 保存
       */
     @PostMapping
     public ResultRsp<Map<String, Integer>> save(@RequestBody UserInfo userInfo){
+
+
+        String userPassword = userInfo.getUserPassword();
+        String encryptPassword = EncryptHelpUtils.aesEncryptStr(Key, userPassword);
+        userInfo.setUserPassword(encryptPassword);
         userInfoService.save(userInfo);
         HashMap<String, Integer> map = new HashMap<>();
         map.put("id", userInfo.getId());
         return ResultRsp.success(map);
     }
+
 
     /**
      * 更新

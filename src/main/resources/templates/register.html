@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>内部员工注册</title>
+    <style>
+        :root {
+            --primary: #007AFF;
+            --accent: #34C759;
+            --red: #FF3B30;
+            --bg-light: #F5F5F7;
+            --bg-dark: #1C2526;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --text: #1D1D1F;
+            --text-secondary: #6E6E73;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+        }
+        [data-theme="dark"] {
+            --bg-light: #1C2526;
+            --card-bg: rgba(28, 37, 38, 0.8);
+            --text: #F5F5F7;
+            --text-secondary: #8E8E93;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Arial, sans-serif;
+            background: var(--bg-light);
+            color: var(--text);
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+        }
+        .navbar {
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+            padding: 12px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .nav-list {
+            display: flex;
+            gap: 16px;
+            list-style: none;
+            margin: 0;
+        }
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            background: var(--card-bg);
+            transition: transform 0.2s, background 0.3s, color 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-item a:hover {
+            transform: translateY(-2px);
+            background: var(--primary);
+            color: white;
+        }
+        .nav-item a.active {
+            background: white;
+            color: var(--primary);
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        .nav-item a.active .nav-icon {
+            transform: scale(1.2);
+        }
+        .nav-icon {
+            font-size: 18px;
+            transition: transform 0.2s;
+        }
+        .nav-text {
+            position: relative;
+        }
+        .nav-text::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+        .nav-item a:hover .nav-text::after {
+            width: 100%;
+        }
+        .nav-item a::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s, height 0.4s;
+        }
+        .nav-item a:active::before {
+            width: 200px;
+            height: 200px;
+        }
+        [data-theme="dark"] .navbar {
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+        }
+        [data-theme="dark"] .nav-item a {
+            background: rgba(28, 37, 38, 0.9);
+        }
+        [data-theme="dark"] .nav-item a.active {
+            background: var(--primary);
+            color: white;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .form-container {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.5);
+            color: var(--text);
+            font-size: 14px;
+        }
+        .form-group select {
+            height: 34px;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        .submit-btn, .cancel-btn {
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: background 0.2s;
+        }
+        .submit-btn {
+            background: var(--primary);
+            color: white;
+        }
+        .cancel-btn {
+            background: var(--card-bg);
+            color: var(--text);
+        }
+        .submit-btn:hover, .cancel-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+        .submit-btn::after, .cancel-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s, height 0.4s;
+        }
+        .submit-btn:active::after, .cancel-btn:active::after {
+            width: 200px;
+            height: 200px;
+        }
+        .theme-toggle {
+            padding: 8px 12px;
+            border-radius: var(--radius);
+            background: var(--card-bg);
+            color: var(--text);
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            height: 34px;
+            line-height: 1;
+        }
+        .theme-toggle:hover {
+            background: var(--primary);
+            color: white;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1002;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            animation: slideUp 0.3s ease-out;
+        }
+        .modal-content h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 12px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @media (max-width: 600px) {
+            .container { padding: 10px; }
+            .header h1 { font-size: 24px; }
+            .form-group input, .form-group select { font-size: 12px; }
+            .submit-btn, .cancel-btn { font-size: 12px; }
+            .nav-list { gap: 10px; justify-content: center; }
+            .nav-item a { padding: 8px 12px; font-size: 14px; }
+            .modal-content { padding: 16px; max-width: 300px; }
+            .modal-content h3 { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-container">
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="/admin/dashboard">
+                    <span class="nav-icon">🍎</span>
+                    <span class="nav-text">水果库存管理</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/orders">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-text">订单详情</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/users" class="active">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-text">内部员工列表</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="header">
+        <h1>内部员工注册</h1>
+        <div class="toolbar">
+            <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+        </div>
+    </div>
+    <div class="form-container">
+        <div class="form-group">
+            <label for="userNameInput">用户名</label>
+            <input type="text" id="userNameInput" placeholder="请输入用户名">
+        </div>
+        <div class="form-group">
+            <label for="userPasswordInput">密码</label>
+            <input type="password" id="userPasswordInput" placeholder="请输入密码">
+        </div>
+        <div class="form-group">
+            <label for="userStateInput">用户状态</label>
+            <select id="userStateInput">
+                <option value="0" selected>未冻结</option>
+                <option value="1">冻结</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="phoneInput">手机号</label>
+            <input type="text" id="phoneInput" placeholder="请输入手机号">
+        </div>
+        <div class="form-group">
+            <label for="emailInput">邮箱（可选）</label>
+            <input type="email" id="emailInput" placeholder="请输入邮箱（可选）">
+        </div>
+        <div class="form-group">
+            <label for="genderInput">性别</label>
+            <select id="genderInput">
+                <option value="">请选择性别</option>
+                <option value="0">女</option>
+                <option value="1">男</option>
+            </select>
+        </div>
+        <div class="form-actions">
+            <button class="cancel-btn" onclick="window.location.href='/admin/users'">取消</button>
+            <button class="submit-btn" onclick="submitForm()">保存</button>
+        </div>
+    </div>
+</div>
+
+<div id="successModal" class="modal">
+    <div class="modal-content">
+        <h3>注册成功</h3>
+    </div>
+</div>
+
+<script>
+    function submitForm() {
+        const userName = document.getElementById('userNameInput').value.trim();
+        const userPassword = document.getElementById('userPasswordInput').value.trim();
+        const userState = document.getElementById('userStateInput').value;
+        const phone = document.getElementById('phoneInput').value.trim();
+        const email = document.getElementById('emailInput').value.trim();
+        const gender = document.getElementById('genderInput').value;
+
+        // 必填项校验
+        if (!userName) {
+            alert('用户名不能为空');
+            return;
+        }
+        if (!userPassword) {
+            alert('密码不能为空');
+            return;
+        }
+        if (!phone) {
+            alert('手机号不能为空');
+            return;
+        }
+        if (!gender) {
+            alert('请选择性别');
+            return;
+        }
+
+        const userData = {
+            userName,
+            userPassword,
+            userState: parseInt(userState),
+            phone,
+            email: email || null,
+            gender
+        };
+
+        fetch('/user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    const modal = document.getElementById('successModal');
+                    modal.classList.add('show');
+                    setTimeout(() => {
+                        modal.classList.remove('show');
+                        window.location.href = '/admin/users';
+                    }, 2000);
+                } else {
+                    alert(data.msg || '注册失败');
+                }
+            })
+            .catch(() => {
+                alert('网络错误，请重试');
+            });
+    }
+
+    function toggleTheme() {
+        const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    }
+
+    function setActiveNav() {
+        const navLinks = document.querySelectorAll('.nav-item a');
+        const currentPath = window.location.pathname;
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+    }
+
+    if (localStorage.getItem('theme') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+
+    setActiveNav();
+</script>
+</body>
+</html>

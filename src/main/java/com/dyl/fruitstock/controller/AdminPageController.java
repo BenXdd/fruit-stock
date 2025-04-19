@@ -31,4 +31,15 @@ public class AdminPageController {
         return "orders"; // 渲染 templates/dashboard.html
     }
 
+    @GetMapping("/users")
+    public String users(Model model) {
+
+        return "users"; // 渲染 templates/dashboard.html
+    } @GetMapping("/register")
+    public String register(Model model) {
+
+        return "register"; // 渲染 templates/dashboard.html
+    }
+
+
 }

@@ -29,6 +29,34 @@ public class UserInfo implements Entity<Integer> {
      */
     private Integer userState;
 
+    /**
+     * 手机号
+     */
+    private String phone;
 
+    /**
+     * 邮箱
+     */
+    private String email;
+
+    /**
+     * 性别:0女  1男
+     */
+    private String gender;
+
+    /**
+     * 创建时间
+     */
+    private Integer createTime;
+
+    /**
+     * 修改时间
+     */
+    private Integer updateTime;
+
+    /**
+     * 最新登录时间
+     */
+    private Integer lastLoginTime;
 
 }
