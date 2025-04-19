@@ -24,4 +24,11 @@ public class AdminPageController {
         return "dashboard"; // 渲染 templates/dashboard.html
     }
 
+
+    @GetMapping("/orders")
+    public String orders(Model model) {
+
+        return "orders"; // 渲染 templates/dashboard.html
+    }
+
 }

@@ -59,12 +59,32 @@ public class OrderInfo implements Entity<Integer> {
     private String orderStatus;
 
 
+
+    private Long startTime;
+    private Long endTime;
+
+
     private List<ProductItem> productArr;
+
+
+
+    private List<ProductItemVo> productInfoList;
+
+
+
 
 
     @Data
     public static class ProductItem {
         private Integer productId;
+        private Integer quantity;
+
+    }
+
+
+    @Data
+    public static class ProductItemVo {
+        private String productName;
         private Integer quantity;
 
     }

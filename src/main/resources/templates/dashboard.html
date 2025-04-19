@@ -35,6 +35,140 @@
             min-height: 100vh;
             transition: background 0.3s, color 0.3s;
         }
+        /* 导航栏样式 */
+        .navbar {
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+            padding: 12px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .nav-list {
+            display: flex;
+            gap: 16px;
+            list-style: none;
+            margin: 0;
+        }
+
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            background: var(--card-bg);
+            transition: transform 0.2s, background 0.3s, color 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item a:hover {
+            transform: translateY(-2px);
+            background: var(--primary);
+            color: white;
+        }
+
+        .nav-item a.active {
+            background: white;
+            color: var(--primary);
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .nav-item a.active .nav-icon {
+            transform: scale(1.2);
+        }
+
+        .nav-icon {
+            font-size: 18px;
+            transition: transform 0.2s;
+        }
+
+        .nav-text {
+            position: relative;
+        }
+
+        /* 下划线动画 */
+        .nav-text::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .nav-item a:hover .nav-text::after {
+            width: 100%;
+        }
+
+        /* 涟漪点击效果 */
+        .nav-item a::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s, height 0.4s;
+        }
+
+        .nav-item a:active::before {
+            width: 200px;
+            height: 200px;
+        }
+
+        /* 明暗模式适配 */
+        [data-theme="dark"] .navbar {
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+        }
+
+        [data-theme="dark"] .nav-item a {
+            background: rgba(28, 37, 38, 0.9);
+        }
+
+        [data-theme="dark"] .nav-item a.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        @media (max-width: 600px) {
+            .navbar {
+                padding: 10px;
+            }
+            .nav-list {
+                gap: 10px;
+                justify-content: center;
+            }
+            .nav-item a {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+            .nav-icon {
+                font-size: 16px;
+            }
+            .nav-text {
+                font-size: 14px;
+            }
+        }
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -344,10 +478,32 @@
             th, td { font-size: 12px; padding: 8px; }
             td img { max-width: 60px; }
             .status-icon { width: 40px; height: 18px; font-size: 10px; line-height: 18px; }
+            .nav-list { gap: 10px; }
+            .nav-item a { font-size: 14px; padding: 6px 12px; }
         }
     </style>
 </head>
 <body>
+<!-- 新增导航栏 -->
+<nav class="navbar">
+    <div class="nav-container">
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="/admin/dashboard">
+                    <span class="nav-icon">🍎</span>
+                    <span class="nav-text">水果库存管理</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/orders" class="active">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-text">订单详情</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
 <div class="container">
     <div class="header">
         <h1>欢迎, <span th:text="${param.userName}">用户</span></h1>
@@ -366,8 +522,8 @@
             <tr>
                 <th>名称</th>
                 <th>库存</th>
-                <th>销售价格</th> <!-- 新增 -->
-                <th>成本价格</th> <!-- 新增 -->
+                <th>销售价格</th>
+                <th>成本价格</th>
                 <th>状态</th>
                 <th>图片</th>
                 <th>操作</th>
@@ -390,10 +546,10 @@
             <input type="text" name="name" required>
             <label>库存</label>
             <input type="number" name="stock" required min="0">
-            <label>销售价格 (元)</label> <!-- 新增 -->
-            <input type="number" name="salePrice" required min="0" step="0.01"> <!-- 支持两位小数 -->
-            <label>成本价格 (元)</label> <!-- 新增 -->
-            <input type="number" name="costPrice" required min="0" step="0.01"> <!-- 支持两位小数 -->
+            <label>销售价格 (元)</label>
+            <input type="number" name="salePrice" required min="0" step="0.01">
+            <label>成本价格 (元)</label>
+            <input type="number" name="costPrice" required min="0" step="0.01">
             <label>状态</label>
             <select name="status" required>
                 <option value="1">上架</option>
@@ -437,8 +593,8 @@
                     row.innerHTML = `
                             <td>${fruit.name}</td>
                             <td>${fruit.stock}</td>
-                            <td>${Number(fruit.salePrice).toFixed(2)}</td> <!-- 新增，格式化两位小数 -->
-                            <td>${Number(fruit.costPrice).toFixed(2)}</td> <!-- 新增，格式化两位小数 -->
+                            <td>${Number(fruit.salePrice).toFixed(2)}</td>
+                            <td>${Number(fruit.costPrice).toFixed(2)}</td>
                             <td><span class="status-icon ${fruit.status === '1' ? 'on' : 'off'}">${fruit.status === '1' ? '上架' : '下架'}</span></td>
                             <td><img src="${fruit.imgUrl}" alt="${fruit.name}" onerror="this.src='/images/placeholder.png'; console.log('Image failed: ${fruit.imgUrl}')"></td>
                             <td class="actions">
@@ -467,7 +623,7 @@
         next.disabled = currentPage >= totalPages;
     }
 
-    function openModal(edit, id, name, stock, status, imgUrl, salePrice, costPrice) { // 新增参数
+    function openModal(edit, id, name, stock, status, imgUrl, salePrice, costPrice) {
         isEdit = edit;
         editId = id;
         const modal = document.getElementById('fruitModal');
@@ -480,15 +636,15 @@
             form.name.value = name;
             form.stock.value = stock;
             form.status.value = status;
-            form.salePrice.value = Number(salePrice).toFixed(2); // 新增
-            form.costPrice.value = Number(costPrice).toFixed(2); // 新增
+            form.salePrice.value = Number(salePrice).toFixed(2);
+            form.costPrice.value = Number(costPrice).toFixed(2);
             preview.src = imgUrl;
             preview.style.display = imgUrl && imgUrl !== '/images/placeholder.png' ? 'block' : 'none';
         } else {
             preview.src = '';
             preview.style.display = 'none';
-            form.salePrice.value = ''; // 新增
-            form.costPrice.value = ''; // 新增
+            form.salePrice.value = '';
+            form.costPrice.value = '';
         }
         modal.style.display = 'flex';
     }
@@ -556,6 +712,18 @@
         localStorage.setItem('theme', theme);
     }
 
+    // 导航栏高亮逻辑
+    function setActiveNav() {
+        const navLinks = document.querySelectorAll('.nav-item a');
+        const currentPath = window.location.pathname;
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+    }
+
     document.getElementById('fruitForm').addEventListener('submit', (e) => {
         e.preventDefault();
         const form = e.target;
@@ -570,11 +738,11 @@
             showMessage('库存必须为非负数', false);
             return;
         }
-        if (!form.salePrice.value || form.salePrice.value < 0) { // 新增验证
+        if (!form.salePrice.value || form.salePrice.value < 0) {
             showMessage('销售价格必须为非负数', false);
             return;
         }
-        if (!form.costPrice.value || form.costPrice.value < 0) { // 新增验证
+        if (!form.costPrice.value || form.costPrice.value < 0) {
             showMessage('成本价格必须为非负数', false);
             return;
         }
@@ -595,8 +763,8 @@
         formData.append('name', form.name.value);
         formData.append('stock', form.stock.value);
         formData.append('status', form.status.value);
-        formData.append('salePrice', form.salePrice.value); // 新增
-        formData.append('costPrice', form.costPrice.value); // 新增
+        formData.append('salePrice', form.salePrice.value);
+        formData.append('costPrice', form.costPrice.value);
         if (fruitImage) {
             formData.append('image', fruitImage);
         }
@@ -681,6 +849,8 @@
         document.documentElement.setAttribute('data-theme', 'dark');
     }
 
+    // 初始化导航栏高亮
+    setActiveNav();
     fetchFruits();
 </script>
 </body>

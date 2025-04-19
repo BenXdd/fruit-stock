@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单详情</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        :root {
+            --primary: #007AFF;
+            --accent: #34C759;
+            --red: #FF3B30;
+            --bg-light: #F5F5F7;
+            --bg-dark: #1C2526;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --text: #1D1D1F;
+            --text-secondary: #6E6E73;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+        }
+        [data-theme="dark"] {
+            --bg-light: #1C2526;
+            --card-bg: rgba(28, 37, 38, 0.8);
+            --text: #F5F5F7;
+            --text-secondary: #8E8E93;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Arial, sans-serif;
+            background: var(--bg-light);
+            color: var(--text);
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+        }
+        /* 导航栏样式 */
+        .navbar {
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+            padding: 12px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .nav-list {
+            display: flex;
+            gap: 16px;
+            list-style: none;
+            margin: 0;
+        }
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            background: var(--card-bg);
+            transition: transform 0.2s, background 0.3s, color 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-item a:hover {
+            transform: translateY(-2px);
+            background: var(--primary);
+            color: white;
+        }
+        .nav-item a.active {
+            background: white;
+            color: var(--primary);
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        .nav-item a.active .nav-icon {
+            transform: scale(1.2);
+        }
+        .nav-icon {
+            font-size: 18px;
+            transition: transform 0.2s;
+        }
+        .nav-text {
+            position: relative;
+        }
+        .nav-text::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+        .nav-item a:hover .nav-text::after {
+            width: 100%;
+        }
+        .nav-item a::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s, height 0.4s;
+        }
+        .nav-item a:active::before {
+            width: 200px;
+            height: 200px;
+        }
+        [data-theme="dark"] .navbar {
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+        }
+        [data-theme="dark"] .nav-item a {
+            background: rgba(28, 37, 38, 0.9);
+        }
+        [data-theme="dark"] .nav-item a.active {
+            background: var(--primary);
+            color: white;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+        .toolbar-instruction {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            width: 100%;
+        }
+        .search-box {
+            position: relative;
+            margin-right: 10px;
+        }
+        .search-box input {
+            padding: 8px 12px 8px 36px;
+            border: none;
+            border-radius: var(--radius);
+            background: var(--card-bg);
+            color: var(--text);
+            font-size: 14px;
+            width: 200px;
+            backdrop-filter: blur(10px);
+        }
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .input-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text);
+        }
+        .date-picker, .datetime-picker, .status-select {
+            padding: 8px 12px;
+            border: none;
+            border-radius: var(--radius);
+            background: var(--card-bg);
+            color: var(--text);
+            font-size: 14px;
+            width: 200px;
+            height: 34px; /* 统一高度 */
+        }
+        .reset-btn, .theme-toggle {
+            padding: 8px 12px;
+            border-radius: var(--radius);
+            background: var(--card-bg);
+            color: var(--text);
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            height: 34px; /* 统一高度 */
+            line-height: 1;
+        }
+        .reset-btn:hover, .theme-toggle:hover {
+            background: var(--primary);
+            color: white;
+        }
+        .theme-toggle {
+            font-size: 20px;
+        }
+        .message {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: var(--radius);
+            color: white;
+            font-size: 14px;
+            z-index: 1001;
+            box-shadow: var(--shadow);
+        }
+        .message.show {
+            display: block;
+            animation: slideIn 0.3s ease-out, slideOut 0.3s ease-out 2.7s forwards;
+        }
+        .message.success {
+            background: var(--accent);
+        }
+        .message.error {
+            background: var(--red);
+        }
+        @keyframes slideIn {
+            from { transform: translate(-50%, -100%); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            to { transform: translate(-50%, -100%); opacity: 0; }
+        }
+        .table-container {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background: var(--primary);
+            color: white;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        tr {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        tr:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        td {
+            font-size: 14px;
+            color: var(--text);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .status-icon {
+            display: inline-block;
+            width: 80px;
+            height: 20px;
+            border-radius: 6px;
+            line-height: 20px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            color: #FFF;
+        }
+        .status-icon.init {
+            background: #FF9500;
+        }
+        .status-icon.settlement {
+            background: var(--accent);
+        }
+        .actions button {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-right: 4px;
+            position: relative;
+            overflow: hidden;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .actions button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s, height 0.4s;
+        }
+        .actions button:active::after {
+            width: 200px;
+            height: 200px;
+        }
+        .status-btn {
+            background: #5856D6;
+        }
+        .product-info {
+            max-width: 300px;
+            white-space: nowrap; /* 确保在一行内显示 */
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .product-item {
+            margin-right: 8px; /* 商品之间的间距 */
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 8px;
+        }
+        .pagination button {
+            background: var(--card-bg);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: background 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        .pagination button:hover {
+            background: var(--primary);
+            color: white;
+        }
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1002;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            animation: slideUp 0.3s ease-out;
+        }
+        .modal-content h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 12px;
+        }
+        .modal-content p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+        .modal-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: background 0.2s;
+        }
+        .modal-btn.confirm {
+            background: var(--primary);
+            color: white;
+        }
+        .modal-btn.cancel {
+            background: var(--card-bg);
+            color: var(--text);
+        }
+        .modal-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+        .modal-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s, height 0.4s;
+        }
+        .modal-btn:active::after {
+            width: 200px;
+            height: 200px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @media (max-width: 600px) {
+            .container { padding: 10px; }
+            .header h1 { font-size: 24px; }
+            .search-box input, .date-picker, .datetime-picker, .status-select, .reset-btn, .theme-toggle {
+                width: 140px;
+                font-size: 12px;
+                height: 30px; /* 小屏幕统一高度 */
+            }
+            .toolbar { flex-direction: column; align-items: flex-start; }
+            .input-group { width: 100%; }
+            .input-group label { font-size: 12px; }
+            .nav-list { gap: 10px; justify-content: center; }
+            .nav-item a { padding: 8px 12px; font-size: 14px; }
+            th, td { font-size: 12px; padding: 8px; }
+            .status-icon { width: 60px; height: 18px; font-size: 10px; line-height: 18px; }
+            .product-info { max-width: 200px; }
+            .modal-content { padding: 16px; max-width: 300px; }
+            .modal-content h3 { font-size: 16px; }
+            .modal-content p { font-size: 12px; }
+            .modal-btn { padding: 6px 12px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+<!-- 新增导航栏 -->
+<nav class="navbar">
+    <div class="nav-container">
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="/admin/dashboard">
+                    <span class="nav-icon">🍎</span>
+                    <span class="nav-text">水果库存管理</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/orders" class="active">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-text">订单详情</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="header">
+        <h1>订单详情</h1>
+        <div class="toolbar">
+            <div class="toolbar-instruction">
+                <p>输入订单号进行模糊搜索，选择订单日期或状态筛选，或设置精确时间范围筛选创建时间。</p>
+            </div>
+            <div class="input-group">
+                <label for="orderCodeInput">订单号</label>
+                <div class="search-box">
+                    <input type="text" id="orderCodeInput" placeholder="输入订单号">
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="todayStrInput">订单日期</label>
+                <input type="text" id="todayStrInput" class="date-picker" placeholder="选择订单日期">
+            </div>
+            <div class="input-group">
+                <label for="orderStatusInput">结算状态</label>
+                <select id="orderStatusInput" class="status-select">
+                    <option value="">全部</option>
+                    <option value="0">未结算</option>
+                    <option value="1">已结算</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="orderStatusInput2">订单状态</label>
+                <select id="orderStatusInput2" class="status-select">
+                    <option value="">全部</option>
+                    <option value="0">未结算</option>
+                    <option value="1">已结算</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="startDateInput">开始时间</label>
+                <input type="text" id="startDateInput" class="datetime-picker" placeholder="选择开始时间">
+            </div>
+            <div class="input-group">
+                <label for="endDateInput">结束时间</label>
+                <input type="text" id="endDateInput" class="datetime-picker" placeholder="选择结束时间">
+            </div>
+            <div class="input-group">
+                <label>&nbsp;</label> <!-- 占位符对齐 -->
+                <button class="reset-btn" onclick="resetSearch()">重置</button>
+            </div>
+            <div class="input-group">
+                <label>&nbsp;</label> <!-- 占位符对齐 -->
+                <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+            </div>
+        </div>
+    </div>
+    <div id="message" class="message"></div>
+    <div class="table-container">
+        <table id="orderTable">
+            <thead>
+            <tr>
+                <th>订单ID</th>
+                <th>订单号</th>
+                <th>日期</th>
+                <th>商品信息</th>
+                <th>销售总价</th>
+                <th>成本总价</th>
+                <th>创建时间</th>
+                <th>状态</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <div class="pagination">
+        <button onclick="fetchOrders(currentPage - 1)" id="prevPage">上一页</button>
+        <button onclick="fetchOrders(currentPage + 1)" id="nextPage">下一页</button>
+    </div>
+</div>
+
+<!-- 模态框 -->
+<div id="confirmModal" class="modal">
+    <div class="modal-content">
+        <h3>确认标记结算</h3>
+        <p id="modalOrderInfo">您确定要将订单（ID: -）标记为已结算吗？</p>
+        <div class="modal-actions">
+            <button class="modal-btn cancel" onclick="closeModal()">取消</button>
+            <button class="modal-btn confirm" onclick="confirmSettle()">确认</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    let currentPage = 1;
+    let totalPages = 1;
+    let currentOrder = { id: null, orderCode: '' }; // 存储当前操作的订单信息
+
+    // 初始化 Flatpickr
+    flatpickr('#todayStrInput', { dateFormat: 'Y-m-d' });
+    flatpickr('#startDateInput', { enableTime: true, dateFormat: 'Y-m-d H:i:S', time_24hr: true });
+    flatpickr('#endDateInput', { enableTime: true, dateFormat: 'Y-m-d H:i:S', time_24hr: true });
+
+    function fetchOrders(page = 1) {
+        const orderCode = document.getElementById('orderCodeInput').value.trim();
+        const todayStr = document.getElementById('todayStrInput').value;
+        const orderStatusInput = document.getElementById('orderStatusInput').value;
+        const orderStatusInput2 = document.getElementById('orderStatusInput2').value;
+
+        // 优先使用 orderStatusInput2 的值，若为空则使用 orderStatusInput
+        const orderStatus = orderStatusInput2 || orderStatusInput;
+
+        // 验证时间格式
+        const startDate = document.getElementById('startDateInput').value;
+        const endDate = document.getElementById('endDateInput').value;
+        if (startDate) {
+            try {
+                const startTime = new Date(startDate).getTime();
+                if (isNaN(startTime)) throw new Error('无效的开始时间');
+            } catch (e) {
+                showMessage('开始时间格式错误: ' + startDate, false);
+                return;
+            }
+        }
+        if (endDate) {
+            try {
+                const endTime = new Date(endDate).getTime();
+                if (isNaN(endTime)) throw new Error('无效的结束时间');
+            } catch (e) {
+                showMessage('结束时间格式错误: ' + endDate, false);
+                return;
+            }
+        }
+        if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+            showMessage('开始时间不能晚于结束时间', false);
+            return;
+        }
+
+        let params = `page=${page}&size=10`;
+        if (orderCode) params += `&orderCode=${encodeURIComponent(orderCode)}`;
+        if (todayStr) params += `&todayStr=${encodeURIComponent(todayStr)}`;
+        if (orderStatus) params += `&orderStatus=${encodeURIComponent(orderStatus)}`;
+        if (startDate) params += `&startTime=${Math.floor(new Date(startDate).getTime() / 1000)}`;
+        if (endDate) params += `&endTime=${Math.floor(new Date(endDate).getTime() / 1000)}`;
+
+        const url = `/order?${params}`;
+        console.log('Fetching URL:', url); // 调试日志
+        document.body.classList.add('loading');
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                document.body.classList.remove('loading');
+                if (data.code !== 200) {
+                    showMessage('加载数据失败', false);
+                    return;
+                }
+                const tbody = document.querySelector('#orderTable tbody');
+                tbody.innerHTML = '';
+                data.data.list.forEach(order => {
+                    const productInfo = (order.productInfoList || []).map(item =>
+                        `<span class="product-item">${item.productName} x${item.quantity}</span>`
+                    ).join(' ');
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                            <td>${order.id}</td>
+                            <td>${order.orderCode}</td>
+                            <td>${order.todayStr}</td>
+                            <td class="product-info">${productInfo || '无商品'}</td>
+                            <td>${Number(order.totalSalePrice).toFixed(2)}</td>
+                            <td>${Number(order.totalCostPrice).toFixed(2)}</td>
+                            <td>${new Date(order.createTime * 1000).toLocaleString()}</td>
+                            <td><span class="status-icon ${order.orderStatus === '1' ? 'settlement' : 'init'}">
+                                ${order.orderStatus === '1' ? '已结算' : '未结算'}
+                            </span></td>
+                            <td class="actions">
+                                ${order.orderStatus === '0' ? `
+                                    <button class="status-btn" onclick="showConfirmModal(${order.id}, '${order.orderCode}')">
+                                        标记结算
+                                    </button>
+                                ` : ''}
+                            </td>
+                        `;
+                    tbody.appendChild(row);
+                });
+                currentPage = data.data.page;
+                totalPages = data.data.totalPages;
+                updatePagination();
+            })
+            .catch(() => {
+                document.body.classList.remove('loading');
+                showMessage('网络错误，请重试', false);
+            });
+    }
+
+    function updatePagination() {
+        const prev = document.getElementById('prevPage');
+        const next = document.getElementById('nextPage');
+        prev.disabled = currentPage <= 1;
+        next.disabled = currentPage >= totalPages;
+    }
+
+    function showConfirmModal(id, orderCode) {
+        currentOrder = { id, orderCode };
+        const modal = document.getElementById('confirmModal');
+        const orderInfo = document.getElementById('modalOrderInfo');
+        orderInfo.textContent = `您确定要将订单（ID: ${id}, 订单号: ${orderCode}）标记为已结算吗？`;
+        modal.classList.add('show');
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('confirmModal');
+        modal.classList.remove('show');
+        currentOrder = { id: null, orderCode: '' };
+    }
+
+    function confirmSettle() {
+        const { id } = currentOrder;
+        if (!id) return;
+        fetch('/order/status', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, orderStatus: '1' })
+        })
+            .then(response => response.json())
+            .then(data => {
+                closeModal();
+                if (data.code === 200) {
+                    fetchOrders(currentPage);
+                    showMessage('状态更新成功', true);
+                } else {
+                    showMessage(data.msg || '更新状态失败', false);
+                }
+            })
+            .catch(() => {
+                closeModal();
+                showMessage('网络错误，请重试', false);
+            });
+    }
+
+    function showMessage(text, isSuccess) {
+        const messageDiv = document.getElementById('message');
+        messageDiv.textContent = text;
+        messageDiv.classList.remove('success', 'error');
+        messageDiv.classList.add(isSuccess ? 'success' : 'error');
+        messageDiv.classList.add('show');
+        setTimeout(() => messageDiv.classList.remove('show'), 3000);
+    }
+
+    function resetSearch() {
+        document.getElementById('orderCodeInput').value = '';
+        document.getElementById('todayStrInput').value = '';
+        document.getElementById('orderStatusInput').value = '';
+        document.getElementById('orderStatusInput2').value = '';
+        document.getElementById('startDateInput').value = '';
+        document.getElementById('endDateInput').value = '';
+        fetchOrders(1);
+    }
+
+    function toggleTheme() {
+        const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    }
+
+    function setActiveNav() {
+        const navLinks = document.querySelectorAll('.nav-item a');
+        const currentPath = window.location.pathname;
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+    }
+
+    // 搜索条件事件监听
+    let debounceTimeout;
+    document.getElementById('orderCodeInput').addEventListener('input', () => {
+        clearTimeout(debounceTimeout);
+        debounceTimeout = setTimeout(() => fetchOrders(1), 300);
+    });
+    document.getElementById('todayStrInput').addEventListener('change', () => {
+        const todayStr = document.getElementById('todayStrInput').value;
+        if (todayStr && !/^\d{4}-\d{2}-\d{2}$/.test(todayStr)) {
+            showMessage('订单日期格式错误', false);
+            return;
+        }
+        fetchOrders(1);
+    });
+    document.getElementById('orderStatusInput').addEventListener('change', () => {
+        document.getElementById('orderStatusInput2').value = '';
+        fetchOrders(1);
+    });
+    document.getElementById('orderStatusInput2').addEventListener('change', () => {
+        document.getElementById('orderStatusInput').value = '';
+        fetchOrders(1);
+    });
+    document.getElementById('startDateInput').addEventListener('change', () => fetchOrders(1));
+    document.getElementById('endDateInput').addEventListener('change', () => fetchOrders(1));
+
+    // 模态框交互
+    document.getElementById('confirmModal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeModal();
+    });
+
+    if (localStorage.getItem('theme') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+
+    setActiveNav();
+    fetchOrders();
+</script>
+</body>
+</html>

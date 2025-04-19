@@ -101,6 +101,12 @@
         <if test="q.orderStatus != null and q.orderStatus != ''">
             AND t.`order_status` = #{q.orderStatus}
         </if>
+         <if test="q.startTime != null">
+            AND t.`create_time` &gt;= #{q.startTime}
+        </if>
+         <if test="q.endTime != null ">
+            AND t.`create_time` &lt;= #{q.endTime}
+        </if>
 
     </sql>
 

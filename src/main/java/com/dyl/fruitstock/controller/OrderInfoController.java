@@ -1,16 +1,21 @@
 package com.dyl.fruitstock.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.dyl.fruitstock.dto.login.ResultRsp;
+import com.dyl.fruitstock.entity.FruitInfo;
 import com.dyl.fruitstock.entity.OrderInfo;
 import com.dyl.fruitstock.exception.BusinessException;
+import com.dyl.fruitstock.service.IFruitInfoService;
 import com.dyl.fruitstock.service.IOrderInfoService;
 import com.dyl.fruitstock.service.IPage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,6 +33,8 @@ public class OrderInfoController {
      */
     @Resource
     private IOrderInfoService orderInfoService;
+    @Resource
+    private IFruitInfoService fruitInfoService;
 
     /**
       * 保存
@@ -68,8 +75,7 @@ public class OrderInfoController {
         OrderInfo orderInfo = orderInfoService.getById(id);
         if(orderInfo == null){
             throw new RuntimeException();
-        }
-        return ResultRsp.success(orderInfo);
+        }return ResultRsp.success(orderInfo);
     }
 
     /**
@@ -77,7 +83,37 @@ public class OrderInfoController {
     */
     @GetMapping
     public ResultRsp<IPage<OrderInfo>>list(OrderInfo query, IPage<OrderInfo> page){
-        return ResultRsp.success(orderInfoService.select(query,page));
+
+        IPage<OrderInfo> select = orderInfoService.select(query, page);
+
+        List<OrderInfo> data = select.getList();
+
+        data.forEach(o ->{
+            String productInfo = o.getProductInfo();
+            List<OrderInfo.ProductItem> productItems = JSONArray.parseArray(productInfo, OrderInfo.ProductItem.class);
+            List<OrderInfo.ProductItemVo> itemVos = new ArrayList<>();
+            for (OrderInfo.ProductItem productItem : productItems) {
+                OrderInfo.ProductItemVo itemVo = new OrderInfo.ProductItemVo();
+                Integer productId = productItem.getProductId();
+                FruitInfo byId = fruitInfoService.getById(productId);
+                String name = byId.getName();
+                itemVo.setQuantity(productItem.getQuantity());
+                itemVo.setProductName(name);
+                itemVos.add(itemVo);
+            }
+            o.setProductInfoList(itemVos);
+
+        });
+        select.setList(data);
+        return ResultRsp.success(select);
+    }
+
+    @PutMapping("status")
+    public ResultRsp<Void> status( @RequestBody OrderInfo orderInfo){
+        orderInfo.setId(orderInfo.getId());
+        orderInfo.setOrderStatus(orderInfo.getOrderStatus());
+        orderInfoService.updateById(orderInfo);
+        return ResultRsp.success();
     }
 
 }
